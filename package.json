@@ -32,12 +32,16 @@
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
+  "bin": {
+    "swarm": "./scripts/swarm-cli.js"
+  },
   "scripts": {
     "dev": "npm run dev:server",
     "dev:server": "nodemon src/server.js",
     "build": "npm run build:prod",
     "build:prod": "NODE_ENV=production webpack --mode production",
     "build:ts": "tsc",
+    "build:cli": "tsc --project tsconfig.cli.json",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "test:e2e": "cypress run",
@@ -53,9 +57,12 @@
     "security:check": "npm audit && snyk test",
     "pre-commit": "lint-staged",
     "prepare": "husky install",
+    "postinstall": "node scripts/postinstall.js",
     "example:traced": "ts-node examples/traced-workflow-example.ts",
     "observability:check": "ts-node -e \"import { langfuseClient } from './src/observability'; langfuseClient.initialize() && console.log('Langfuse connection:', langfuseClient.isEnabled() ? 'OK' : 'DISABLED')\"",
     "workflow:trace": "LANGFUSE_ENABLED=true npm run example:traced",
+    "swarm": "node scripts/swarm-cli.js",
+    "swarm:dev": "NODE_ENV=development node scripts/swarm-cli.js",
     "swarm:start": "ts-node src/swarm/cli.ts start",
     "swarm:monitor": "ts-node src/monitoring/cli.ts",
     "swarm:example": "ts-node examples/run-swarm-workflow.ts"
@@ -85,7 +92,23 @@
     "async-mutex": "^0.4.0",
     "eventemitter3": "^5.0.1",
     "lru-cache": "^10.1.0",
-    "ms": "^2.1.3"
+    "ms": "^2.1.3",
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "inquirer": "^8.2.6",
+    "cli-table3": "^0.6.3",
+    "figlet": "^1.7.0",
+    "cli-progress": "^3.12.0",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "@octokit/rest": "^20.0.2",
+    "@octokit/auth-app": "^6.0.3",
+    "@octokit/webhooks": "^12.0.10",
+    "@slack/web-api": "^6.11.0",
+    "@slack/events-api": "^3.0.1",
+    "@slack/bolt": "^3.15.0",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
