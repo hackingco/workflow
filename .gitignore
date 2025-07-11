@@ -1,0 +1,153 @@
+# HackingCo Flow Framework - Git Ignore Configuration
+
+# Dependencies
+node_modules/
+bower_components/
+vendor/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+*.bundle.js
+*.bundle.css
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+config/secrets.json
+config/production.json
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.code-workspace
+.history/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+cypress/videos/
+cypress/screenshots/
+*.lcov
+
+# Package files
+*.tgz
+*.zip
+*.tar.gz
+*.rar
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.tmp/
+temp/
+
+# HackingCo specific
+hackingco-deploy/
+client-data/
+proprietary/
+internal-docs/
+.hackingco-cache/
+workflow-backups/
+audit-logs/
+
+# Security
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+ssl/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+data/
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+site/
+
+# Python (for any Python scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# Monitoring and Performance
+.performance/
+.metrics/
+lighthouse-reports/
+
+# Client-specific (should never be committed)
+client-configs/
+client-secrets/
+customer-data/
+
+# Backup files
+*.bak
+*.backup
+*_backup
+backup/
+
+# Lock files (debate on these, but for proprietary software)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Miscellaneous
+.grunt/
+.sass-cache/
+.parcel-cache/
+.dynamodb/
+.tern-port
+.vscode-test/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
