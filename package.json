@@ -37,6 +37,7 @@
     "dev:server": "nodemon src/server.js",
     "build": "npm run build:prod",
     "build:prod": "NODE_ENV=production webpack --mode production",
+    "build:ts": "tsc",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "test:e2e": "cypress run",
@@ -51,7 +52,10 @@
     "analyze": "webpack-bundle-analyzer dist/stats.json",
     "security:check": "npm audit && snyk test",
     "pre-commit": "lint-staged",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "example:traced": "ts-node examples/traced-workflow-example.ts",
+    "observability:check": "ts-node -e \"import { langfuseClient } from './src/observability'; langfuseClient.initialize() && console.log('Langfuse connection:', langfuseClient.isEnabled() ? 'OK' : 'DISABLED')\"",
+    "workflow:trace": "LANGFUSE_ENABLED=true npm run example:traced"
   },
   "dependencies": {
     "@hackingco/core": "^1.0.0",
@@ -63,12 +67,15 @@
     "axios": "^1.4.0",
     "lodash": "^4.17.21",
     "winston": "^3.8.2",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "langfuse": "^3.6.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/jest": "^29.5.0",
+    "@types/uuid": "^9.0.2",
     "@typescript-eslint/eslint-plugin": "^5.59.0",
     "@typescript-eslint/parser": "^5.59.0",
     "eslint": "^8.40.0",
@@ -83,7 +90,8 @@
     "cypress": "^12.11.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
-    "typedoc": "^0.24.7"
+    "typedoc": "^0.24.7",
+    "ts-node": "^10.9.1"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

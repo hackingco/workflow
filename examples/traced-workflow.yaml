@@ -1,0 +1,365 @@
+# Traced Workflow Example with Langfuse Integration
+# This demonstrates a complete workflow with observability features
+
+workflow:
+  id: customer-onboarding-flow
+  name: Customer Onboarding Workflow
+  version: "2.0.0"
+  description: Enterprise customer onboarding with full observability
+  
+  # Workflow-level metadata for tracing
+  metadata:
+    department: sales
+    product: enterprise
+    sla_hours: 24
+    compliance_required: true
+    trace_sampling_rate: 1.0
+
+  # Observability configuration
+  observability:
+    enabled: true
+    provider: langfuse
+    features:
+      - performance_tracking
+      - error_monitoring
+      - decision_tracking
+      - retry_tracking
+      - custom_events
+    
+    # Performance thresholds
+    thresholds:
+      task_duration_ms: 5000
+      workflow_duration_ms: 60000
+      retry_limit: 3
+
+  # Workflow tasks with tracing
+  tasks:
+    - id: validate_customer_data
+      name: Validate Customer Data
+      type: validation
+      handler: handlers.validateCustomerData
+      description: Validate and sanitize customer input data
+      
+      config:
+        required_fields:
+          - company_name
+          - contact_email
+          - industry
+          - company_size
+        validation_rules:
+          email: regex:^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+          company_size: range:1-100000
+      
+      # Task-specific tracing
+      tracing:
+        capture_input: true
+        capture_output: true
+        sensitive_fields:
+          - tax_id
+          - bank_account
+      
+      timeout: 5000
+      retryPolicy:
+        maxAttempts: 3
+        backoffMultiplier: 2
+        initialInterval: 1000
+
+    - id: check_compliance
+      name: Compliance Check
+      type: external_api
+      handler: handlers.checkCompliance
+      description: Verify customer against compliance databases
+      
+      dependencies:
+        - validate_customer_data
+      
+      config:
+        endpoints:
+          - url: https://api.compliance-check.com/v2/verify
+            timeout: 10000
+          - url: https://api.sanctions-list.com/check
+            timeout: 8000
+        
+        parallel_execution: true
+      
+      # Enhanced tracing for external calls
+      tracing:
+        track_external_calls: true
+        capture_headers: false
+        log_response_time: true
+        
+      timeout: 15000
+      retryPolicy:
+        maxAttempts: 2
+        backoffMultiplier: 3
+        initialInterval: 2000
+        maxInterval: 10000
+
+    - id: create_account
+      name: Create Customer Account
+      type: database
+      handler: handlers.createAccount
+      description: Create account in primary database
+      
+      dependencies:
+        - check_compliance
+      
+      config:
+        transaction: true
+        isolation_level: read_committed
+        
+      # Database operation tracing
+      tracing:
+        track_queries: true
+        capture_query_plans: false
+        slow_query_threshold_ms: 1000
+      
+      timeout: 10000
+      retryPolicy:
+        maxAttempts: 1
+
+    - id: setup_workspace
+      name: Setup Customer Workspace
+      type: provisioning
+      handler: handlers.setupWorkspace
+      description: Provision resources and setup workspace
+      
+      dependencies:
+        - create_account
+      
+      config:
+        resources:
+          - type: storage
+            size: 100GB
+          - type: compute
+            instances: 2
+          - type: database
+            size: 10GB
+        
+        region: us-east-1
+      
+      # Resource provisioning tracing
+      tracing:
+        track_resource_allocation: true
+        capture_cost_metrics: true
+        track_provisioning_steps: true
+      
+      timeout: 30000
+      retryPolicy:
+        maxAttempts: 3
+        backoffMultiplier: 2
+        initialInterval: 5000
+
+    - id: send_welcome_email
+      name: Send Welcome Email
+      type: notification
+      handler: handlers.sendWelcomeEmail
+      description: Send onboarding email to customer
+      
+      dependencies:
+        - setup_workspace
+      
+      config:
+        template: enterprise_welcome_v2
+        personalization: true
+        track_opens: true
+        
+      # Email tracking
+      tracing:
+        track_delivery: true
+        capture_template_data: true
+        exclude_fields:
+          - email_content
+      
+      timeout: 5000
+      retryPolicy:
+        maxAttempts: 3
+        backoffMultiplier: 2
+        initialInterval: 1000
+
+    - id: schedule_onboarding_call
+      name: Schedule Onboarding Call
+      type: calendar
+      handler: handlers.scheduleCall
+      description: Schedule customer success onboarding call
+      
+      dependencies:
+        - send_welcome_email
+      
+      config:
+        calendar_system: google
+        meeting_duration: 60
+        availability_check: true
+        send_invite: true
+        
+      # Calendar integration tracing
+      tracing:
+        track_availability_checks: true
+        capture_meeting_metadata: true
+      
+      timeout: 10000
+      retryPolicy:
+        maxAttempts: 2
+
+  # Decision points with tracking
+  decisions:
+    - id: compliance_decision
+      after_task: check_compliance
+      criteria:
+        - field: compliance_score
+          operator: gte
+          value: 80
+        - field: sanctions_check
+          operator: eq
+          value: clear
+      
+      on_pass:
+        continue: true
+      
+      on_fail:
+        action: manual_review
+        notify:
+          - compliance-team@hackingco.com
+        tracking:
+          reason: compliance_threshold_not_met
+          severity: high
+
+    - id: provisioning_decision
+      after_task: setup_workspace
+      criteria:
+        - field: all_resources_provisioned
+          operator: eq
+          value: true
+      
+      on_pass:
+        continue: true
+      
+      on_fail:
+        action: retry_with_fallback
+        fallback_region: us-west-2
+        tracking:
+          reason: provisioning_failure
+          severity: medium
+
+  # Workflow-level error handling
+  error_handling:
+    default_action: rollback
+    
+    specific_errors:
+      - error_type: ValidationError
+        action: return_error
+        track_as: user_error
+        
+      - error_type: ComplianceError
+        action: escalate
+        notify:
+          - compliance-team@hackingco.com
+          - legal-team@hackingco.com
+        track_as: compliance_violation
+        
+      - error_type: ProvisioningError
+        action: retry_with_backoff
+        max_retries: 5
+        track_as: infrastructure_error
+
+  # Custom events to track
+  custom_events:
+    - name: high_value_customer
+      condition:
+        field: contract_value
+        operator: gte
+        value: 100000
+      metadata:
+        importance: high
+        notify_sales: true
+    
+    - name: enterprise_features_requested
+      condition:
+        field: requested_features
+        operator: contains
+        value: enterprise
+      metadata:
+        upsell_opportunity: true
+
+  # Performance monitoring
+  performance:
+    track_memory_usage: true
+    track_cpu_usage: true
+    sampling_rate: 1.0
+    
+    alerts:
+      - metric: task_duration
+        threshold: 10000
+        action: log_warning
+        
+      - metric: memory_usage
+        threshold: 512MB
+        action: alert_ops
+        
+      - metric: error_rate
+        threshold: 0.05
+        action: page_oncall
+
+# Execution configuration
+execution:
+  mode: production
+  parallelism: 5
+  timeout: 300000
+  
+  # Tracing configuration
+  tracing:
+    enabled: true
+    provider: langfuse
+    sampling:
+      type: adaptive
+      base_rate: 0.1
+      error_rate: 1.0
+      slow_request_rate: 1.0
+      slow_threshold_ms: 5000
+    
+    # Context propagation
+    propagation:
+      inject_headers: true
+      extract_headers: true
+      formats:
+        - w3c_traceparent
+        - baggage
+    
+    # Data privacy
+    privacy:
+      anonymize_user_data: false
+      exclude_fields:
+        - password
+        - credit_card
+        - ssn
+        - api_key
+      hash_sensitive_data: true
+
+  # Tags for all traces
+  tags:
+    - workflow:customer-onboarding
+    - version:2.0.0
+    - environment:production
+    - region:us-east-1
+    - team:customer-success
+
+# Integration with monitoring systems
+monitoring:
+  langfuse:
+    project_name: hackingco-workflows
+    environment: production
+    
+  metrics:
+    export_interval: 60000
+    include_trace_metrics: true
+    include_span_metrics: true
+    
+  alerts:
+    channels:
+      - type: slack
+        webhook: ${SLACK_WEBHOOK_URL}
+        severity: error
+        
+      - type: pagerduty
+        api_key: ${PAGERDUTY_API_KEY}
+        severity: critical
