@@ -1,0 +1,384 @@
+# HackingCo Swarm Workflow Example
+# Demonstrates advanced swarm coordination capabilities
+
+name: Enterprise Data Processing Swarm
+description: Multi-agent swarm for processing large-scale enterprise data with intelligent coordination
+
+# Swarm Configuration
+swarm:
+  strategy: auto  # Automatic strategy selection based on workload
+  
+  # Agent Configuration
+  agents:
+    - id: research-agent-1
+      type: research
+      name: Market Research Analyst
+      capabilities:
+        - market_analysis
+        - data_collection
+        - trend_identification
+      resources:
+        cpu: 0.5
+        memory: 1024
+        priority: 8
+    
+    - id: analysis-agent-1
+      type: analysis
+      name: Data Analyst
+      capabilities:
+        - statistical_analysis
+        - pattern_recognition
+        - data_validation
+      resources:
+        cpu: 0.7
+        memory: 2048
+        priority: 7
+    
+    - id: execution-agent-1
+      type: execution
+      name: Process Executor
+      capabilities:
+        - data_transformation
+        - batch_processing
+        - pipeline_execution
+      resources:
+        cpu: 1.0
+        memory: 4096
+        priority: 6
+    
+    - id: validation-agent-1
+      type: validation
+      name: Quality Validator
+      capabilities:
+        - data_validation
+        - compliance_check
+        - error_detection
+      resources:
+        cpu: 0.3
+        memory: 512
+        priority: 9
+    
+    - id: coordinator-agent-1
+      type: coordination
+      name: Swarm Coordinator
+      capabilities:
+        - task_distribution
+        - consensus_facilitation
+        - resource_optimization
+      resources:
+        cpu: 0.4
+        memory: 768
+        priority: 10
+
+  # Objectives and Success Criteria
+  objectives:
+    primary:
+      id: process-enterprise-data
+      description: Process and analyze enterprise data with 99.9% accuracy
+      type: quality
+      priority: critical
+      metrics:
+        - name: accuracy
+          type: gauge
+          unit: percentage
+        - name: processing_time
+          type: histogram
+          unit: milliseconds
+    
+    secondary:
+      - id: optimize-resource-usage
+        description: Minimize resource consumption while maintaining performance
+        type: performance
+        priority: high
+        metrics:
+          - name: cpu_utilization
+            type: gauge
+            unit: percentage
+          - name: memory_usage
+            type: gauge
+            unit: megabytes
+      
+      - id: ensure-compliance
+        description: Ensure all data processing meets regulatory requirements
+        type: quality
+        priority: critical
+    
+    constraints:
+      - type: time
+        value: 3600000  # 1 hour maximum
+        description: Complete all processing within 1 hour
+      
+      - type: resource
+        value:
+          maxMemory: 16384
+          maxCpu: 5.0
+        description: Stay within resource limits
+    
+    successCriteria:
+      minSuccessRate: 99.5
+      maxFailures: 5
+      requiredCapabilities:
+        - data_validation
+        - compliance_check
+
+  # Resource Configuration
+  resources:
+    maxConcurrency: 10
+    memoryLimit: 16384  # 16GB
+    cpuLimit: 5.0
+    networkBandwidth: 1000  # Mbps
+
+  # Monitoring Configuration
+  monitoring:
+    enabled: true
+    metricsInterval: 5000  # 5 seconds
+    
+    alertThresholds:
+      - metric: task_failure_rate
+        operator: ">"
+        value: 0.05
+        action: notify
+        cooldown: 60000
+      
+      - metric: memory_usage
+        operator: ">"
+        value: 14336  # 14GB
+        action: throttle
+        cooldown: 30000
+      
+      - metric: task_queue_size
+        operator: ">"
+        value: 100
+        action: scale
+        cooldown: 120000
+    
+    tracing:
+      enabled: true
+      provider: langfuse
+      samplingRate: 1.0
+    
+    logging:
+      level: info
+      format: json
+      destinations:
+        - type: console
+          config: {}
+        - type: file
+          config:
+            path: ./logs/swarm.log
+            maxSize: 100MB
+            maxFiles: 10
+
+  # Persistence Configuration
+  persistence:
+    enabled: true
+    provider: file
+    checkpointInterval: 300000  # 5 minutes
+    retentionDays: 7
+    encryptionKey: ${SWARM_ENCRYPTION_KEY}
+
+  # Scaling Configuration
+  scaling:
+    enabled: true
+    minAgents: 5
+    maxAgents: 20
+    scalingMetric: task_queue_size
+    scaleUpThreshold: 50
+    scaleDownThreshold: 10
+    cooldownPeriod: 60000  # 1 minute
+
+  # Retry Policy
+  retryPolicy:
+    maxRetries: 3
+    backoffStrategy: exponential
+    initialDelay: 1000
+    maxDelay: 30000
+    retryableErrors:
+      - TEMPORARY_FAILURE
+      - RESOURCE_UNAVAILABLE
+      - TIMEOUT
+
+# Workflow Phases
+phases:
+  - name: Data Collection
+    description: Gather data from multiple sources
+    tasks:
+      - id: collect-market-data
+        name: Collect Market Data
+        type: process
+        input:
+          sources:
+            - type: api
+              endpoint: ${MARKET_DATA_API}
+            - type: database
+              connection: ${MARKET_DB_CONN}
+        requirements:
+          capabilities:
+            - market_analysis
+            - data_collection
+        priority: high
+      
+      - id: collect-internal-data
+        name: Collect Internal Data
+        type: process
+        input:
+          sources:
+            - type: database
+              connection: ${INTERNAL_DB_CONN}
+            - type: file
+              path: ${DATA_PATH}
+        requirements:
+          capabilities:
+            - data_collection
+        priority: high
+
+  - name: Data Analysis
+    description: Analyze collected data for insights
+    tasks:
+      - id: statistical-analysis
+        name: Perform Statistical Analysis
+        type: analyze
+        input:
+          methods:
+            - regression
+            - correlation
+            - time_series
+        requirements:
+          capabilities:
+            - statistical_analysis
+          dependencies:
+            - collect-market-data
+            - collect-internal-data
+        priority: medium
+      
+      - id: pattern-detection
+        name: Detect Patterns
+        type: analyze
+        input:
+          algorithms:
+            - clustering
+            - anomaly_detection
+        requirements:
+          capabilities:
+            - pattern_recognition
+          dependencies:
+            - statistical-analysis
+        priority: medium
+
+  - name: Data Transformation
+    description: Transform data for reporting
+    tasks:
+      - id: transform-results
+        name: Transform Analysis Results
+        type: transform
+        input:
+          format: enterprise_report
+          schema: ${REPORT_SCHEMA}
+        requirements:
+          capabilities:
+            - data_transformation
+          dependencies:
+            - pattern-detection
+        priority: medium
+      
+      - id: aggregate-metrics
+        name: Aggregate Performance Metrics
+        type: aggregate
+        input:
+          metrics:
+            - accuracy
+            - performance
+            - compliance
+        requirements:
+          capabilities:
+            - data_transformation
+          dependencies:
+            - transform-results
+        priority: low
+
+  - name: Validation
+    description: Validate results and ensure compliance
+    tasks:
+      - id: validate-results
+        name: Validate Analysis Results
+        type: validate
+        input:
+          rules:
+            - accuracy_threshold: 0.995
+            - completeness_check: true
+        requirements:
+          capabilities:
+            - data_validation
+          dependencies:
+            - transform-results
+        priority: critical
+      
+      - id: compliance-check
+        name: Check Regulatory Compliance
+        type: validate
+        input:
+          regulations:
+            - GDPR
+            - SOC2
+            - HIPAA
+        requirements:
+          capabilities:
+            - compliance_check
+          dependencies:
+            - validate-results
+        priority: critical
+
+  - name: Consensus
+    description: Achieve consensus on final results
+    tasks:
+      - id: quality-consensus
+        name: Quality Assurance Consensus
+        type: custom
+        input:
+          topic: final_report_approval
+          options:
+            - approve
+            - reject
+            - revise
+          threshold: 0.8
+        requirements:
+          capabilities:
+            - consensus_facilitation
+          dependencies:
+            - compliance-check
+        priority: high
+
+# Hive Mind Configuration
+hiveMind:
+  enabled: true
+  consensusThreshold: 0.75
+  knowledgeSharing:
+    - key: best_practices
+      ttl: 86400000  # 24 hours
+    - key: error_patterns
+      ttl: 604800000  # 7 days
+    - key: optimization_strategies
+      ttl: 2592000000  # 30 days
+
+# Environment Variables
+environment:
+  MARKET_DATA_API: https://api.marketdata.com/v2
+  MARKET_DB_CONN: postgresql://user:pass@market-db:5432/market
+  INTERNAL_DB_CONN: postgresql://user:pass@internal-db:5432/internal
+  DATA_PATH: /data/enterprise
+  REPORT_SCHEMA: /schemas/enterprise-report-v2.json
+  SWARM_ENCRYPTION_KEY: ${SECRET_ENCRYPTION_KEY}
+  LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+  LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+
+# Execution Settings
+execution:
+  mode: production
+  debugLevel: 1
+  maxExecutionTime: 3600000  # 1 hour
+  checkpointOnCompletion: true
+  notificationChannels:
+    - type: email
+      address: swarm-admin@hackingco.com
+    - type: slack
+      webhook: ${SLACK_WEBHOOK_URL}
